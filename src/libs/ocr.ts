@@ -1,5 +1,6 @@
 import cv from "@techstark/opencv-js";
 import { OEM, Word, createWorker } from "tesseract.js";
+import { HSV, RGB } from "./color";
 
 declare module "tesseract.js" {
 	interface Block {
@@ -14,12 +15,32 @@ declare module "tesseract.js" {
 	interface Word {
 		id: string;
 		is_highlighted: boolean;
+		highlight_color?: RGB;
 	}
 }
 
-type ImageLike = string | HTMLImageElement | HTMLCanvasElement;
+type ImageLike = HTMLImageElement | HTMLCanvasElement;
 
-export function threshold(srcImg: ImageLike, dstImg: ImageLike) {
+export function rgb(
+	srcImg: ImageLike,
+	dstImg?: HTMLCanvasElement,
+): HTMLCanvasElement {
+	const src = cv.imread(srcImg);
+	const dst = new cv.Mat();
+
+	const canvas = dstImg ?? document.createElement("canvas");
+	cv.imshow(canvas, src);
+
+	src.delete();
+	dst.delete();
+
+	return canvas;
+}
+
+export function threshold(
+	srcImg: ImageLike,
+	dstImg?: HTMLCanvasElement,
+): HTMLCanvasElement {
 	const src = cv.imread(srcImg);
 	const dst = new cv.Mat();
 
@@ -28,56 +49,87 @@ export function threshold(srcImg: ImageLike, dstImg: ImageLike) {
 
 	const thresholdValue = 120;
 	const maxValue = 255;
-	cv.threshold(dst, dst, thresholdValue, maxValue, cv.THRESH_BINARY + cv.THRESH_OTSU);
+	cv.threshold(
+		dst,
+		dst,
+		thresholdValue,
+		maxValue,
+		cv.THRESH_BINARY + cv.THRESH_OTSU,
+	);
 
-	cv.imshow(dstImg, dst);
+	const canvas = dstImg ?? document.createElement("canvas");
+	cv.imshow(canvas, dst);
 
 	src.delete();
 	dst.delete();
-	// return dst;
+
+	return canvas;
 }
 
-export function colorSegmentation(srcImg: ImageLike, dstImg: ImageLike) {
+type ColorSegmentation = {
+	srcImg: ImageLike;
+	dstImg?: HTMLCanvasElement;
+	lowerHsv: HSV;
+	upperHsv: HSV;
+};
+export function colorSegmentation({
+	srcImg,
+	dstImg,
+	lowerHsv,
+	upperHsv,
+}: ColorSegmentation) {
 	const src = cv.imread(srcImg);
+	console.log("src", { src, type: src.type(), channels: src.channels() });
 	const dst = new cv.Mat();
 
+	// TODO check if RGBA or RGB, and if RGB or BGR?
 	cv.cvtColor(src, src, cv.COLOR_RGBA2RGB, 0);
+	console.log("src", { src, type: src.type(), channels: src.channels() });
+
 	cv.cvtColor(src, dst, cv.COLOR_RGB2HSV, 0);
+	console.log("dst", { dst, type: dst.type(), channels: dst.channels() });
 
-	const hsv_lower = [22, 30, 30, 0];
-	const hsv_upper = [45, 255, 255, 255];
+	// normalize HSV values to OpenCV range (H: 0-179, S: 0-255, V: 0-255)
+	const normLowerHsv = HSV.normalize(lowerHsv, [179, 255, 255]);
+	const normUpperHsv = HSV.normalize(upperHsv, [180, 255, 255]);
 
-	// let low = new cv.Mat(dst.size(), dst.type(), hsv_lower);
-	// let high = new cv.Mat(dst.size(), dst.type(), hsv_upper);
+	// https://cvexplained.wordpress.com/2020/04/28/color-detection-hsv/
+	// const hsv_lower = [22, 30, 30, 0];
+	// const hsv_upper = [45, 255, 255, 255];
 
-	const low = new cv.Mat(dst.rows, dst.cols, dst.type(), hsv_lower);
-	const high = new cv.Mat(dst.rows, dst.cols, dst.type(), hsv_upper);
+	const low = new cv.Mat(
+		dst.rows,
+		dst.cols,
+		dst.type(),
+		new cv.Scalar(normLowerHsv.h, normLowerHsv.s, normLowerHsv.v),
+	);
+	const high = new cv.Mat(
+		dst.rows,
+		dst.cols,
+		dst.type(),
+		new cv.Scalar(normUpperHsv.h, normUpperHsv.s, normUpperHsv.v),
+	);
+
 	cv.inRange(dst, low, high, dst);
 
-	cv.imshow(dstImg, dst);
-
-	src.delete();
-	dst.delete();
-	// return dst;
-}
-
-export function denoise(srcImg: ImageLike, dstImg: ImageLike) {
-	const src = cv.imread(srcImg);
-	const dst = new cv.Mat();
-
+	// denoise mask
 	const kernel = cv.Mat.ones(5, 5, cv.CV_8U);
-	cv.morphologyEx(src, dst, cv.MORPH_OPEN, kernel, new cv.Point(-1, -1), 1);
+	cv.morphologyEx(dst, dst, cv.MORPH_OPEN, kernel, new cv.Point(-1, -1), 1);
 
-	cv.imshow(dstImg, dst);
+	const canvas = dstImg ?? document.createElement("canvas");
+	cv.imshow(canvas, dst);
 
-	kernel.delete();
 	src.delete();
 	dst.delete();
-	// return dst;
+
+	return canvas;
 }
 
-export function applyMask(srcImg: ImageLike, dstImg: ImageLike, maskImg: ImageLike) {
-	console.log('applyMask', { srcImg, dstImg, maskImg });
+export function applyMask(
+	srcImg: ImageLike,
+	maskImg: ImageLike,
+	dstImg?: HTMLCanvasElement,
+) {
 	const src = cv.imread(srcImg);
 	const dst = new cv.Mat();
 
@@ -86,17 +138,29 @@ export function applyMask(srcImg: ImageLike, dstImg: ImageLike, maskImg: ImageLi
 
 	cv.bitwise_and(src, src, dst, mask);
 
-	cv.imshow(dstImg, dst);
+	const canvas = dstImg ?? document.createElement("canvas");
+	cv.imshow(canvas, dst);
 
 	src.delete();
 	mask.delete();
 	dst.delete();
+
+	return canvas;
 }
 
-export async function recognize(srcImg: ImageLike, maskImg: ImageLike, thresholdPercentage: number = 25) {
-	console.log('parse', srcImg, maskImg, thresholdPercentage);
-	const worker = await createWorker('eng', OEM.DEFAULT, {
-		logger: m => console.log(m),
+type RecognizeOptions = {
+	thresholdPercentage: number;
+	highlightColor?: RGB;
+};
+export async function recognize(
+	srcImg: ImageLike,
+	maskImg: ImageLike,
+	options: RecognizeOptions,
+) {
+	console.log("parse", srcImg, maskImg, options);
+	const { thresholdPercentage, highlightColor } = options;
+	const worker = await createWorker("eng", OEM.DEFAULT, {
+		logger: (m) => (m.progress === 1 ? console.log(m) : undefined),
 	});
 
 	const result = await worker.recognize(srcImg);
@@ -106,7 +170,7 @@ export async function recognize(srcImg: ImageLike, maskImg: ImageLike, threshold
 	cv.cvtColor(mask, mask, cv.COLOR_RGBA2GRAY);
 
 	const blocks = result.data.blocks ?? [];
-	for (let bix = 0; bix < blocks.length ?? 0; bix++) {
+	for (let bix = 0; bix < blocks.length; bix++) {
 		const block = blocks[bix];
 		block.id = `b-${bix}`;
 
@@ -122,6 +186,9 @@ export async function recognize(srcImg: ImageLike, maskImg: ImageLike, threshold
 					const word = line.words[wix];
 					word.id = `${line.id}-w-${wix}`;
 					word.is_highlighted = isHighlighted(word, mask, thresholdPercentage);
+					word.highlight_color = word.is_highlighted
+						? highlightColor
+						: undefined;
 				}
 			}
 		}
@@ -132,7 +199,11 @@ export async function recognize(srcImg: ImageLike, maskImg: ImageLike, threshold
 	return result;
 }
 
-const isHighlighted = (word: Word, mask: cv.Mat, thresholdPercentage: number = 25): boolean => {
+const isHighlighted = (
+	word: Word,
+	mask: cv.Mat,
+	thresholdPercentage: number = 25,
+): boolean => {
 	const { x0, y0, x1, y1 } = word.bbox;
 	const width = x1 - x0;
 	const height = y1 - y0;
@@ -143,4 +214,4 @@ const isHighlighted = (word: Word, mask: cv.Mat, thresholdPercentage: number = 2
 	const count = cv.countNonZero(imgMaskRoi);
 
 	return count > rectThresholdPixels;
-}
+};

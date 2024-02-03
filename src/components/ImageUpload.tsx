@@ -6,7 +6,6 @@ export interface ImageUploadProps {
 
 let draggingCounter = 0;
 
-
 export function ImageUpload(props: ImageUploadProps) {
 	const { onUpload } = props;
 
@@ -53,7 +52,6 @@ export function ImageUpload(props: ImageUploadProps) {
 		onUpload(targetFile);
 	};
 
-
 	const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
 		const [targetFile] = event.target.files ?? [];
 
@@ -73,10 +71,10 @@ export function ImageUpload(props: ImageUploadProps) {
 			<label>
 				<div>Click here to choose a file or drag and drop it here</div>
 
-				<div >
+				<div>
 					<input type="file" onChange={handleInputChange} />
 				</div>
 			</label>
 		</div>
 	);
-};
+}
