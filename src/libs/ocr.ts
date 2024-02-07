@@ -15,7 +15,6 @@ declare module "tesseract.js" {
 	interface Word {
 		id: string;
 		is_highlighted: boolean;
-		highlight_color?: RGB;
 	}
 }
 
@@ -148,25 +147,29 @@ export function applyMask(
 	return canvas;
 }
 
-type RecognizeOptions = {
+type Recognize = {
+		srcImg: ImageLike,
+	maskImg?: ImageLike,
 	thresholdPercentage: number;
-	highlightColor?: RGB;
+	onProgress?: (progress: number) => void;
 };
-export async function recognize(
-	srcImg: ImageLike,
-	maskImg: ImageLike,
-	options: RecognizeOptions,
-) {
-	console.log("parse", srcImg, maskImg, options);
-	const { thresholdPercentage, highlightColor } = options;
+export async function recognize({
+	srcImg,
+	maskImg,
+	thresholdPercentage, onProgress, }: Recognize) {
+	console.log("parse", srcImg, maskImg, thresholdPercentage);
 	const worker = await createWorker("eng", OEM.DEFAULT, {
-		logger: (m) => (m.progress === 1 ? console.log(m) : undefined),
+		logger: (m) => {
+			console.log(m);
+			onProgress?.(m.progress);
+		},
 	});
 
 	const result = await worker.recognize(srcImg);
 	await worker.terminate();
 
-	const mask = cv.imread(maskImg);
+		const src = cv.imread(srcImg);
+	const mask = maskImg ? cv.imread(maskImg) : cv.Mat.zeros(src.rows, src.cols, src.type());
 	cv.cvtColor(mask, mask, cv.COLOR_RGBA2GRAY);
 
 	const blocks = result.data.blocks ?? [];
@@ -186,9 +189,6 @@ export async function recognize(
 					const word = line.words[wix];
 					word.id = `${line.id}-w-${wix}`;
 					word.is_highlighted = isHighlighted(word, mask, thresholdPercentage);
-					word.highlight_color = word.is_highlighted
-						? highlightColor
-						: undefined;
 				}
 			}
 		}

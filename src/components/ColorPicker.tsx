@@ -1,20 +1,25 @@
 import React, { useEffect, useRef, useState } from "react";
 import { RGB } from "../libs/color";
+import { Size } from "../libs/image";
 
 export interface ColorPickerProps {
 	image: HTMLImageElement;
+	size?: Size;
 	onColorChange?: (color: RGB) => void;
+	onClearImage?: () => void;
 }
 
-export function ColorPicker(props: ColorPickerProps) {
-	const { image, onColorChange } = props;
+export function ColorPicker({ image, size, onColorChange, onClearImage }: ColorPickerProps) {
+	const { width, height } = size ?? { width: 0, height: 0 };
 
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const canvasContainerRef = useRef<HTMLDivElement>(null);
 	const canvasContextRef = useRef<CanvasRenderingContext2D | null>(null);
 
-	const [hoverColor, setHoverColor] = useState<RGB>({ r: 255, g: 255, b: 255 });
+	const [hoverColor, setHoverColor] = useState<RGB>();
 	// const [color, setColor] = useState<Color>({ red: 255, green: 255, blue: 255 });
+
+	const [isPickerActive, setPickerActive] = useState(false);
 
 	useEffect(() => {
 		const canvas = canvasRef.current;
@@ -30,14 +35,16 @@ export function ColorPicker(props: ColorPickerProps) {
 			if (!canvasContext) return;
 			canvasContextRef.current = canvasContext;
 
-			if (image) {
+			if (image && width && height) {
 				// if (image.width > image.height) {
 				const canvasMaxWidth = canvasContainerRect.width;
 				const reducedImageWidth = Math.min(image.width, canvasMaxWidth);
 				const imageWidthReduction = reducedImageWidth / image.width;
 
-				canvas.width = reducedImageWidth;
-				canvas.height = image.height * imageWidthReduction;
+				canvas.width = width;
+				canvas.height = height;
+				// canvas.width = reducedImageWidth;
+				// canvas.height = image.height * imageWidthReduction;
 				// } else {
 				// 	const canvasMaxHeight = window.innerHeight * 0.75;
 				// 	const reducedImageHeight = Math.min(image.height, canvasMaxHeight);
@@ -54,7 +61,7 @@ export function ColorPicker(props: ColorPickerProps) {
 				canvasContext.clearRect(0, 0, canvas.width, canvas.height);
 			}
 		}
-	}, [image]);
+	}, [image, width, height]);
 
 	const [isMouseOver, setIsMouseOver] = useState(false);
 	const requestAnimationFrameRef = useRef<number>(0);
@@ -93,12 +100,13 @@ export function ColorPicker(props: ColorPickerProps) {
 					1,
 				).data;
 				// setColor({ red, green, blue });
+				setPickerActive(false);
 				onColorChange?.({ r, g, b });
 			}
 		};
 
 		const canvasContainer = canvasContainerRef.current;
-		if (canvasContainer) {
+		if (canvasContainer && isPickerActive) {
 			canvasContainer.addEventListener("mouseenter", handleMouseEnter);
 			canvasContainer.addEventListener("mouseleave", handleMouseLeave);
 			canvasContainer.addEventListener("mousemove", handleMouseMove);
@@ -113,7 +121,7 @@ export function ColorPicker(props: ColorPickerProps) {
 				canvasContainer.removeEventListener("click", handleMouseClick);
 			}
 		};
-	}, [onColorChange]);
+	}, [onColorChange, isPickerActive]);
 
 	return (
 		<div className="relative">
@@ -121,14 +129,25 @@ export function ColorPicker(props: ColorPickerProps) {
 				<canvas ref={canvasRef} />
 			</div>
 
-			{image && (
-				<div className="absolute top-10 right-10">
+			{image && (<>
+				<button
+					onClick={() => setPickerActive(!isPickerActive)}
+					className={`absolute top-5 left-5 bg-white hover:opacity-100 ${isPickerActive ? 'opacity-100' : 'opacity-50'} rounded-md text-md flex items-center p-1 shadow-md transition-opacity duration-300 ease-in-out`}
+				>
 					<div
-						className="w-10 h-10 rounded-full border-2 border-white"
-						style={{ background: RGB.toString(hoverColor) }}
-					/>
-				</div>
-			)}
+						className="w-5 h-5 rounded-full border-1 border-black opacity-1 mr-1"
+						style={{ backgroundColor: hoverColor ? RGB.toString(hoverColor) : 'black' }}
+					>
+					</div>
+					<span>Pick Color</span>
+
+				</button>
+				<button
+					onClick={() => onClearImage?.()}
+					className={`absolute top-5 right-5 bg-white hover:opacity-100 opacity-50 rounded-md text-md flex items-center p-1 shadow-md transition-opacity duration-300 ease-in-out`}
+				>Reset Image
+				</button>
+			</>)}
 		</div>
 	);
 }

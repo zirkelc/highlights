@@ -1,3 +1,9 @@
+export type ColorRange<T> = {
+	current: T;
+	lower: T;
+	upper: T;
+};
+
 export type RGB = {
 	r: number; // 0-255
 	g: number; // 0-255
@@ -17,11 +23,17 @@ export type Range<T> = [T, T];
 export type Norm = [number, number, number];
 
 export const RGB = {
+
+	black: { r: 0, g: 0, b: 0 },
+	white: { r: 255, g: 255, b: 255 },
+
 	/**
 	 * @see https://gist.github.com/mjackson/5311256
 	 */
 	toHSV({ r, g, b }: RGB): HSV {
-		(r /= 255), (g /= 255), (b /= 255);
+		r /= 255;
+		g /= 255;
+		b /= 255;
 
 		const max = Math.max(r, g, b),
 			min = Math.min(r, g, b);
@@ -62,6 +74,40 @@ export const RGB = {
 };
 
 export const HSV = {
+
+	black: { h: 0, s: 0, v: 0 },
+	white: { h: 0, s: 0, v: 100 },
+
+	/**
+	 * @see https://gist.github.com/mjackson/5311256
+	 */
+	toRGB({ h, s, v }: HSV): RGB {
+		h /= 360;
+		    s /= 100;
+		v /= 100;
+		
+		let r = 0, g=0, b= 0;
+
+		let i = Math.floor(h * 6);
+		let f = h * 6 - i;
+		let p = v * (1 - s);
+		let q = v * (1 - f * s);
+		let t = v * (1 - (1 - f) * s);
+
+		switch (i % 6) {
+			case 0: r = v, g = t, b = p; break;
+			case 1: r = q, g = v, b = p; break;
+			case 2: r = p, g = v, b = t; break;
+			case 3: r = p, g = q, b = v; break;
+			case 4: r = t, g = p, b = v; break;
+			case 5: r = v, g = p, b = q; break;
+		}
+
+		return {
+			r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255)
+		};
+	},
+
 	range({ h, s, v }: HSV, [scaleH, scaleS, scaleV]: Scale): Range<HSV> {
 		let lowH = h * (1 - scaleH / 100);
 		if (lowH < 0) lowH += 360;
@@ -100,6 +146,8 @@ export const HSV = {
 	},
 
 	toString({ h, s, v }: HSV): string {
-		return `hsv(${h}, ${s}%, ${v}%)`;
+		const rgb = HSV.toRGB({ h, s, v });
+
+		return RGB.toString(rgb);
 	},
 };

@@ -62,14 +62,14 @@ export function ImageUpload(props: ImageUploadProps) {
 
 	return (
 		<div
-			className="h-full"
+			className="h-full font-mono"
 			onDrop={handleDrop}
 			onDragEnter={handleDragEnter}
 			onDragLeave={handleDragLeave}
 			onDragOver={handleDragOver}
 		>
 			<label>
-				<div>Click here to choose a file or drag and drop it here</div>
+				<p>Click here to choose a file or drag and drop it here</p>
 
 				<div>
 					<input type="file" onChange={handleInputChange} />

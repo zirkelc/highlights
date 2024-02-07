@@ -7,15 +7,16 @@ import {
 	RecognizeResult,
 	Word,
 } from "tesseract.js";
-import { RGB } from "../libs/color";
+import { HSV, RGB } from "../libs/color";
+import { Progress } from "./Progress";
 
 const renderPage = (page: Page) => {
-	return <div className="ocr_page">{page.blocks?.map(renderBlock)}</div>;
+	return <div>{page.blocks?.map(renderBlock)}</div>;
 };
 
 const renderBlock = (block: Block, index: number) => {
 	return (
-		<div id={block.id} key={block.id} className="ocr_carea">
+		<div id={block.id} key={block.id}>
 			{block.paragraphs?.map((p, i) => renderParagraph(p, i))}
 		</div>
 	);
@@ -23,7 +24,7 @@ const renderBlock = (block: Block, index: number) => {
 
 const renderParagraph = (paragraph: Paragraph, index: number) => {
 	return (
-		<p id={paragraph.id} key={paragraph.id} className="ocr_par">
+		<p id={paragraph.id} key={paragraph.id}>
 			{paragraph.lines?.map(renderLine)}
 		</p>
 	);
@@ -31,7 +32,7 @@ const renderParagraph = (paragraph: Paragraph, index: number) => {
 
 const renderLine = (line: Line, index: number) => {
 	return (
-		<span id={line.id} key={line.id} className="ocr_line">
+		<span id={line.id} key={line.id}>
 			{line.words?.map(renderWord)}
 		</span>
 	);
@@ -42,12 +43,7 @@ const renderWord = (word: Word, index: number) => {
 		<span
 			id={word.id}
 			key={word.id}
-			className={`ocrx_word`}
-			style={{
-				backgroundColor: word.highlight_color
-					? RGB.toString(word.highlight_color)
-					: "inherit",
-			}}
+			className={`${word.is_highlighted ? 'highlighted' : ''}`}
 		>
 			{word.text}{" "}
 		</span>
@@ -55,18 +51,30 @@ const renderWord = (word: Word, index: number) => {
 };
 
 type Props = {
+	loading?: boolean;
+	progress?: number;
 	result?: RecognizeResult;
-	highlightColor?: RGB;
+	highlightColor?: HSV;
 };
 
-export function TextRenderer({ result }: Props) {
+export function TextRenderer({ progress, result, highlightColor }: Props) {
+	const loading = progress && progress < 1;
 	return (
 		<div className="w-full h-full">
+			{progress === 1 ? (<style>{`
+				.highlighted {
+					background-color: ${highlightColor ? HSV.toString(highlightColor) : "inherit"}
+				}
+			`}</style>) : (<Progress progress={progress} />
+			)}
+
 			{result ? (
-				renderPage(result.data)
+				<div className="font-mono">
+					{renderPage(result.data)}
+				</div>
 			) : (
-				<div className="flex items-center justify-center w-full h-full">
-					<p className="text-4xl font-bold text-gray-400">No image uploaded</p>
+				<div className="flex items-center justify-center">
+					<p className="text-xl font-bold font-mono text-gray-400">No image uploaded yet</p>
 				</div>
 			)}
 		</div>

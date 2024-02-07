@@ -1,13 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Size } from "../libs/image";
 
 export interface ColorPickerProps {
 	image: HTMLImageElement;
-	sourceCanvas: HTMLCanvasElement | null;
+	size?: Size;
+	sourceCanvas?: HTMLCanvasElement;
 }
 
-export function ImagePreview(props: ColorPickerProps) {
-	const { image, sourceCanvas: sourceCanvas } = props;
-
+export function ImagePreview({ image, size, sourceCanvas }: ColorPickerProps) {
+	const { width, height } = size ?? { width: 0, height: 0 };
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const canvasContainerRef = useRef<HTMLDivElement>(null);
 	const canvasContextRef = useRef<CanvasRenderingContext2D | null>(null);
@@ -22,21 +23,26 @@ export function ImagePreview(props: ColorPickerProps) {
 
 		console.log("canvas", canvasContainerRect);
 
-		if (targetCanvas && canvasContainerRect) {
+		console.log("ImageReview", { size, sourceCanvas, targetCanvas });
+
+		if (targetCanvas) {
 			const canvasContext = targetCanvas.getContext("2d", {
 				willReadFrequently: true,
 			});
 			if (!canvasContext) return;
 			canvasContextRef.current = canvasContext;
 
-			if (image && sourceCanvas) {
-				// if (image.width > image.height) {
-				const canvasMaxWidth = canvasContainerRect.width;
-				const reducedImageWidth = Math.min(image.width, canvasMaxWidth);
-				const imageWidthReduction = reducedImageWidth / image.width;
+			if (image && sourceCanvas && width && height) {
+				targetCanvas.width = width;
+				targetCanvas.height = height;
 
-				targetCanvas.width = reducedImageWidth;
-				targetCanvas.height = image.height * imageWidthReduction;
+				// if (image.width > image.height) {
+				// const canvasMaxWidth = canvasContainerRect.width;
+				// const reducedImageWidth = Math.min(image.width, canvasMaxWidth);
+				// const imageWidthReduction = reducedImageWidth / image.width;
+
+				// targetCanvas.width = reducedImageWidth;
+				// targetCanvas.height = image.height * imageWidthReduction;
 				// } else {
 				// 	const canvasMaxHeight = window.innerHeight * 0.75;
 				// 	const reducedImageHeight = Math.min(image.height, canvasMaxHeight);
@@ -59,7 +65,7 @@ export function ImagePreview(props: ColorPickerProps) {
 				canvasContext.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
 			}
 		}
-	}, [image, sourceCanvas]);
+	}, [image, sourceCanvas, width, height]);
 
 	// const [isMouseOver, setIsMouseOver] = useState(false);
 	// const requestAnimationFrameRef = useRef<number>(0);
