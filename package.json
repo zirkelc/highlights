@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-hook/resize-observer": "^1.2.6",
     "@techstark/opencv-js": "4.9.0-release.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

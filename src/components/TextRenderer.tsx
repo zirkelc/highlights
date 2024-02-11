@@ -43,7 +43,7 @@ const renderWord = (word: Word, index: number) => {
 		<span
 			id={word.id}
 			key={word.id}
-			className={`${word.is_highlighted ? 'highlighted' : ''}`}
+			className={`${word.is_highlighted ? "highlighted" : ""}`}
 		>
 			{word.text}{" "}
 		</span>
@@ -51,30 +51,28 @@ const renderWord = (word: Word, index: number) => {
 };
 
 type Props = {
-	loading?: boolean;
-	progress?: number;
 	result?: RecognizeResult;
 	highlightColor?: HSV;
 };
 
-export function TextRenderer({ progress, result, highlightColor }: Props) {
-	const loading = progress && progress < 1;
+export function TextRenderer({ result, highlightColor }: Props) {
 	return (
 		<div className="w-full h-full">
-			{progress === 1 ? (<style>{`
+			<style>{`
 				.highlighted {
-					background-color: ${highlightColor ? HSV.toString(highlightColor) : "inherit"}
+					background-color: ${
+						highlightColor ? HSV.toString(highlightColor) : "inherit"
+					}
 				}
-			`}</style>) : (<Progress progress={progress} />
-			)}
+			`}</style>
 
 			{result ? (
-				<div className="font-mono">
-					{renderPage(result.data)}
-				</div>
+				<div className="font-mono">{renderPage(result.data)}</div>
 			) : (
 				<div className="flex items-center justify-center">
-					<p className="text-xl font-bold font-mono text-gray-400">No image uploaded yet</p>
+					<p className="text-xl font-bold font-mono text-gray-400">
+						No image uploaded yet
+					</p>
 				</div>
 			)}
 		</div>

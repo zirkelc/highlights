@@ -6,6 +6,9 @@ export interface ImageUploadProps {
 
 let draggingCounter = 0;
 
+/**
+ * @see https://github.com/btmnk/image-color-picker
+ */
 export function ImageUpload(props: ImageUploadProps) {
 	const { onUpload } = props;
 

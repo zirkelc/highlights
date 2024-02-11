@@ -147,29 +147,37 @@ export function applyMask(
 	return canvas;
 }
 
-type Recognize = {
-		srcImg: ImageLike,
-	maskImg?: ImageLike,
+export type RecognizeProgress = {
+	progress: number;
+	status: string;
+};
+type RecognizeInput = {
+	srcImg: ImageLike;
+	maskImg?: ImageLike;
 	thresholdPercentage: number;
-	onProgress?: (progress: number) => void;
+	onProgress?: (progress: RecognizeProgress) => void;
 };
 export async function recognize({
 	srcImg,
 	maskImg,
-	thresholdPercentage, onProgress, }: Recognize) {
+	thresholdPercentage,
+	onProgress,
+}: RecognizeInput) {
 	console.log("parse", srcImg, maskImg, thresholdPercentage);
 	const worker = await createWorker("eng", OEM.DEFAULT, {
 		logger: (m) => {
 			console.log(m);
-			onProgress?.(m.progress);
+			onProgress?.(m);
 		},
 	});
 
 	const result = await worker.recognize(srcImg);
 	await worker.terminate();
 
-		const src = cv.imread(srcImg);
-	const mask = maskImg ? cv.imread(maskImg) : cv.Mat.zeros(src.rows, src.cols, src.type());
+	const src = cv.imread(srcImg);
+	const mask = maskImg
+		? cv.imread(maskImg)
+		: cv.Mat.zeros(src.rows, src.cols, src.type());
 	cv.cvtColor(mask, mask, cv.COLOR_RGBA2GRAY);
 
 	const blocks = result.data.blocks ?? [];
@@ -202,7 +210,7 @@ export async function recognize({
 const isHighlighted = (
 	word: Word,
 	mask: cv.Mat,
-	thresholdPercentage: number = 25,
+	thresholdPercentage = 25,
 ): boolean => {
 	const { x0, y0, x1, y1 } = word.bbox;
 	const width = x1 - x0;

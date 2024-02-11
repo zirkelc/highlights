@@ -23,7 +23,6 @@ export type Range<T> = [T, T];
 export type Norm = [number, number, number];
 
 export const RGB = {
-
 	black: { r: 0, g: 0, b: 0 },
 	white: { r: 255, g: 255, b: 255 },
 
@@ -35,15 +34,15 @@ export const RGB = {
 		g /= 255;
 		b /= 255;
 
-		const max = Math.max(r, g, b),
-			min = Math.min(r, g, b);
+		const max = Math.max(r, g, b);
+		const min = Math.min(r, g, b);
 		const d = max - min;
 
 		let h = 0;
-		const s = max == 0 ? 0 : d / max;
+		const s = max === 0 ? 0 : d / max;
 		const v = max;
 
-		if (max == min) {
+		if (max === min) {
 			h = 0; // achromatic
 		} else {
 			switch (max) {
@@ -74,7 +73,6 @@ export const RGB = {
 };
 
 export const HSV = {
-
 	black: { h: 0, s: 0, v: 0 },
 	white: { h: 0, s: 0, v: 100 },
 
@@ -83,28 +81,56 @@ export const HSV = {
 	 */
 	toRGB({ h, s, v }: HSV): RGB {
 		h /= 360;
-		    s /= 100;
+		s /= 100;
 		v /= 100;
-		
-		let r = 0, g=0, b= 0;
 
-		let i = Math.floor(h * 6);
-		let f = h * 6 - i;
-		let p = v * (1 - s);
-		let q = v * (1 - f * s);
-		let t = v * (1 - (1 - f) * s);
+		let r = 0;
+		let g = 0;
+		let b = 0;
+
+		const i = Math.floor(h * 6);
+		const f = h * 6 - i;
+		const p = v * (1 - s);
+		const q = v * (1 - f * s);
+		const t = v * (1 - (1 - f) * s);
 
 		switch (i % 6) {
-			case 0: r = v, g = t, b = p; break;
-			case 1: r = q, g = v, b = p; break;
-			case 2: r = p, g = v, b = t; break;
-			case 3: r = p, g = q, b = v; break;
-			case 4: r = t, g = p, b = v; break;
-			case 5: r = v, g = p, b = q; break;
+			case 0:
+				r = v;
+				g = t;
+				b = p;
+				break;
+			case 1:
+				r = q;
+				g = v;
+				b = p;
+				break;
+			case 2:
+				r = p;
+				g = v;
+				b = t;
+				break;
+			case 3:
+				r = p;
+				g = q;
+				b = v;
+				break;
+			case 4:
+				r = t;
+				g = p;
+				b = v;
+				break;
+			case 5:
+				r = v;
+				g = p;
+				b = q;
+				break;
 		}
 
 		return {
-			r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255)
+			r: Math.round(r * 255),
+			g: Math.round(g * 255),
+			b: Math.round(b * 255),
 		};
 	},
 
