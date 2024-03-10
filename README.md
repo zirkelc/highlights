@@ -5,7 +5,8 @@ This project is a JavaScript port of my Python app designed to extract highlight
 
 ## Demo
 Here is a short demonstration video:
-https://github.com/zirkelc/highlights/assets/950244/9ccb70e4-ebab-43cd-8afb-4b2eb19ef80e
+
+https://github.com/zirkelc/highlights/assets/950244/9e39a57c-2349-46dc-b0fa-9e39b1ab01ae
 
 ## Usage
 - Got to [zirkelc.github.io/highlights/](https://zirkelc.github.io/highlights/)
