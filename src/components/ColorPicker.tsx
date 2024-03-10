@@ -117,9 +117,8 @@ export function ColorPicker({
 					<button
 						type="button"
 						onClick={() => setPickerActive(!isPickerActive)}
-						className={`absolute top-5 left-5 bg-white hover:opacity-100 ${
-							isPickerActive ? "opacity-100" : "opacity-50"
-						} rounded-md text-md flex items-center p-1 shadow-md transition-opacity duration-300 ease-in-out`}
+						className={`absolute top-5 left-5 bg-white hover:opacity-100 ${isPickerActive ? "opacity-100" : "opacity-50"
+							} rounded-md text-md flex items-center p-1 shadow-md transition-opacity duration-300 ease-in-out`}
 					>
 						<div
 							className="w-5 h-5 rounded-full border-1 border-black opacity-1 mr-1"
@@ -128,7 +127,7 @@ export function ColorPicker({
 									? RGB.toString(hoverColor)
 									: "black",
 							}}
-						></div>
+						/>
 						<span>Pick Color</span>
 					</button>
 					<button
