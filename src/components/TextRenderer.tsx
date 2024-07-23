@@ -1,80 +1,65 @@
-import React from "react";
-import {
-	Block,
-	Line,
-	Page,
-	Paragraph,
-	RecognizeResult,
-	Word,
-} from "tesseract.js";
-import { HSV, RGB } from "../libs/color";
-import { Progress } from "./Progress";
+import React from 'react';
+import type { Block, Line, Page, Paragraph, RecognizeResult, Word } from 'tesseract.js';
+import { HSV, RGB } from '../libs/color';
+import { Progress } from './Progress';
 
 const renderPage = (page: Page) => {
-	return <div>{page.blocks?.map(renderBlock)}</div>;
+  return <div>{page.blocks?.map(renderBlock)}</div>;
 };
 
 const renderBlock = (block: Block, index: number) => {
-	return (
-		<div id={block.id} key={block.id}>
-			{block.paragraphs?.map((p, i) => renderParagraph(p, i))}
-		</div>
-	);
+  return (
+    <div id={block.id} key={block.id}>
+      {block.paragraphs?.map((p, i) => renderParagraph(p, i))}
+    </div>
+  );
 };
 
 const renderParagraph = (paragraph: Paragraph, index: number) => {
-	return (
-		<p id={paragraph.id} key={paragraph.id}>
-			{paragraph.lines?.map(renderLine)}
-		</p>
-	);
+  return (
+    <p id={paragraph.id} key={paragraph.id}>
+      {paragraph.lines?.map(renderLine)}
+    </p>
+  );
 };
 
 const renderLine = (line: Line, index: number) => {
-	return (
-		<span id={line.id} key={line.id}>
-			{line.words?.map(renderWord)}
-		</span>
-	);
+  return (
+    <span id={line.id} key={line.id}>
+      {line.words?.map(renderWord)}
+    </span>
+  );
 };
 
 const renderWord = (word: Word, index: number) => {
-	return (
-		<span
-			id={word.id}
-			key={word.id}
-			className={`${word.is_highlighted ? "highlighted" : ""}`}
-		>
-			{word.text}{" "}
-		</span>
-	);
+  return (
+    <span id={word.id} key={word.id} className={`${word.is_highlighted ? 'highlighted' : ''}`}>
+      {word.text}{' '}
+    </span>
+  );
 };
 
 type Props = {
-	result?: RecognizeResult;
-	highlightColor?: HSV;
+  result?: RecognizeResult;
+  highlightColor?: HSV;
 };
 
 export function TextRenderer({ result, highlightColor }: Props) {
-	return (
-		<div className="w-full h-full">
-			<style>{`
+  return (
+    <div className="w-full h-full">
+      <style>{`
 				.highlighted {
-					background-color: ${
-						highlightColor ? HSV.toString(highlightColor) : "inherit"
-					}
+					background-color: ${highlightColor ? HSV.toString(highlightColor) : 'inherit'}
 				}
 			`}</style>
 
-			{result ? (
-				<div className="font-mono">{renderPage(result.data)}</div>
-			) : (
-				<div className="flex items-center justify-center">
-					<p className="text-xl font-bold font-mono text-gray-400">
-						No image uploaded yet
-					</p>
-				</div>
-			)}
-		</div>
-	);
+      {result ? (
+        <div className="font-mono">{renderPage(result.data)}</div>
+      ) : (
+        <div className="flex items-center justify-center">
+          <p className="text-xl font-bold font-mono text-gray-400">No image uploaded yet</p>
+        </div>
+      )}
+    </div>
+  );
 }

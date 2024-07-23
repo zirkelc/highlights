@@ -1,225 +1,188 @@
-import cv from "@techstark/opencv-js";
-import { OEM, Word, createWorker } from "tesseract.js";
-import { HSV, RGB } from "./color";
+import cv from '@techstark/opencv-js';
+import { OEM, type Word, createWorker } from 'tesseract.js';
+import { HSV, RGB } from './color';
 
-declare module "tesseract.js" {
-	interface Block {
-		id: string;
-	}
-	interface Paragraph {
-		id: string;
-	}
-	interface Line {
-		id: string;
-	}
-	interface Word {
-		id: string;
-		is_highlighted: boolean;
-	}
+declare module 'tesseract.js' {
+  interface Block {
+    id: string;
+  }
+  interface Paragraph {
+    id: string;
+  }
+  interface Line {
+    id: string;
+  }
+  interface Word {
+    id: string;
+    is_highlighted: boolean;
+  }
 }
 
 type ImageLike = HTMLImageElement | HTMLCanvasElement;
 
-export function rgb(
-	srcImg: ImageLike,
-	dstImg?: HTMLCanvasElement,
-): HTMLCanvasElement {
-	const src = cv.imread(srcImg);
-	const dst = new cv.Mat();
+export function rgb(srcImg: ImageLike, dstImg?: HTMLCanvasElement): HTMLCanvasElement {
+  const src = cv.imread(srcImg);
+  const dst = new cv.Mat();
 
-	const canvas = dstImg ?? document.createElement("canvas");
-	cv.imshow(canvas, src);
+  const canvas = dstImg ?? document.createElement('canvas');
+  cv.imshow(canvas, src);
 
-	src.delete();
-	dst.delete();
+  src.delete();
+  dst.delete();
 
-	return canvas;
+  return canvas;
 }
 
-export function threshold(
-	srcImg: ImageLike,
-	dstImg?: HTMLCanvasElement,
-): HTMLCanvasElement {
-	const src = cv.imread(srcImg);
-	const dst = new cv.Mat();
+export function threshold(srcImg: ImageLike, dstImg?: HTMLCanvasElement): HTMLCanvasElement {
+  const src = cv.imread(srcImg);
+  const dst = new cv.Mat();
 
-	cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY);
-	cv.normalize(src, dst, 0, 255, cv.NORM_MINMAX);
+  cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY);
+  cv.normalize(src, dst, 0, 255, cv.NORM_MINMAX);
 
-	const thresholdValue = 120;
-	const maxValue = 255;
-	cv.threshold(
-		dst,
-		dst,
-		thresholdValue,
-		maxValue,
-		cv.THRESH_BINARY + cv.THRESH_OTSU,
-	);
+  const thresholdValue = 120;
+  const maxValue = 255;
+  cv.threshold(dst, dst, thresholdValue, maxValue, cv.THRESH_BINARY + cv.THRESH_OTSU);
 
-	const canvas = dstImg ?? document.createElement("canvas");
-	cv.imshow(canvas, dst);
+  const canvas = dstImg ?? document.createElement('canvas');
+  cv.imshow(canvas, dst);
 
-	src.delete();
-	dst.delete();
+  src.delete();
+  dst.delete();
 
-	return canvas;
+  return canvas;
 }
 
 type ColorSegmentation = {
-	srcImg: ImageLike;
-	dstImg?: HTMLCanvasElement;
-	lowerHsv: HSV;
-	upperHsv: HSV;
+  srcImg: ImageLike;
+  dstImg?: HTMLCanvasElement;
+  lowerHsv: HSV;
+  upperHsv: HSV;
 };
-export function colorSegmentation({
-	srcImg,
-	dstImg,
-	lowerHsv,
-	upperHsv,
-}: ColorSegmentation) {
-	const src = cv.imread(srcImg);
-	console.log("src", { src, type: src.type(), channels: src.channels() });
-	const dst = new cv.Mat();
+export function colorSegmentation({ srcImg, dstImg, lowerHsv, upperHsv }: ColorSegmentation) {
+  const src = cv.imread(srcImg);
+  console.log('src', { src, type: src.type(), channels: src.channels() });
+  const dst = new cv.Mat();
 
-	// TODO check if RGBA or RGB, and if RGB or BGR?
-	cv.cvtColor(src, src, cv.COLOR_RGBA2RGB, 0);
-	console.log("src", { src, type: src.type(), channels: src.channels() });
+  // TODO check if RGBA or RGB, and if RGB or BGR?
+  cv.cvtColor(src, src, cv.COLOR_RGBA2RGB, 0);
+  console.log('src', { src, type: src.type(), channels: src.channels() });
 
-	cv.cvtColor(src, dst, cv.COLOR_RGB2HSV, 0);
-	console.log("dst", { dst, type: dst.type(), channels: dst.channels() });
+  cv.cvtColor(src, dst, cv.COLOR_RGB2HSV, 0);
+  console.log('dst', { dst, type: dst.type(), channels: dst.channels() });
 
-	// normalize HSV values to OpenCV range (H: 0-179, S: 0-255, V: 0-255)
-	const normLowerHsv = HSV.normalize(lowerHsv, [179, 255, 255]);
-	const normUpperHsv = HSV.normalize(upperHsv, [180, 255, 255]);
+  // normalize HSV values to OpenCV range (H: 0-179, S: 0-255, V: 0-255)
+  const normLowerHsv = HSV.normalize(lowerHsv, [179, 255, 255]);
+  const normUpperHsv = HSV.normalize(upperHsv, [180, 255, 255]);
 
-	// https://cvexplained.wordpress.com/2020/04/28/color-detection-hsv/
-	// const hsv_lower = [22, 30, 30, 0];
-	// const hsv_upper = [45, 255, 255, 255];
+  // https://cvexplained.wordpress.com/2020/04/28/color-detection-hsv/
+  // const hsv_lower = [22, 30, 30, 0];
+  // const hsv_upper = [45, 255, 255, 255];
 
-	const low = new cv.Mat(
-		dst.rows,
-		dst.cols,
-		dst.type(),
-		new cv.Scalar(normLowerHsv.h, normLowerHsv.s, normLowerHsv.v),
-	);
-	const high = new cv.Mat(
-		dst.rows,
-		dst.cols,
-		dst.type(),
-		new cv.Scalar(normUpperHsv.h, normUpperHsv.s, normUpperHsv.v),
-	);
+  const low = new cv.Mat(dst.rows, dst.cols, dst.type(), new cv.Scalar(normLowerHsv.h, normLowerHsv.s, normLowerHsv.v));
+  const high = new cv.Mat(
+    dst.rows,
+    dst.cols,
+    dst.type(),
+    new cv.Scalar(normUpperHsv.h, normUpperHsv.s, normUpperHsv.v),
+  );
 
-	cv.inRange(dst, low, high, dst);
+  cv.inRange(dst, low, high, dst);
 
-	// denoise mask
-	const kernel = cv.Mat.ones(5, 5, cv.CV_8U);
-	cv.morphologyEx(dst, dst, cv.MORPH_OPEN, kernel, new cv.Point(-1, -1), 1);
+  // denoise mask
+  const kernel = cv.Mat.ones(5, 5, cv.CV_8U);
+  cv.morphologyEx(dst, dst, cv.MORPH_OPEN, kernel, new cv.Point(-1, -1), 1);
 
-	const canvas = dstImg ?? document.createElement("canvas");
-	cv.imshow(canvas, dst);
+  const canvas = dstImg ?? document.createElement('canvas');
+  cv.imshow(canvas, dst);
 
-	src.delete();
-	dst.delete();
+  src.delete();
+  dst.delete();
 
-	return canvas;
+  return canvas;
 }
 
-export function applyMask(
-	srcImg: ImageLike,
-	maskImg: ImageLike,
-	dstImg?: HTMLCanvasElement,
-) {
-	const src = cv.imread(srcImg);
-	const dst = new cv.Mat();
+export function applyMask(srcImg: ImageLike, maskImg: ImageLike, dstImg?: HTMLCanvasElement) {
+  const src = cv.imread(srcImg);
+  const dst = new cv.Mat();
 
-	const mask = cv.imread(maskImg);
-	cv.cvtColor(mask, mask, cv.COLOR_RGBA2GRAY); //! mask must be one channel, not 3 channels
+  const mask = cv.imread(maskImg);
+  cv.cvtColor(mask, mask, cv.COLOR_RGBA2GRAY); //! mask must be one channel, not 3 channels
 
-	cv.bitwise_and(src, src, dst, mask);
+  cv.bitwise_and(src, src, dst, mask);
 
-	const canvas = dstImg ?? document.createElement("canvas");
-	cv.imshow(canvas, dst);
+  const canvas = dstImg ?? document.createElement('canvas');
+  cv.imshow(canvas, dst);
 
-	src.delete();
-	mask.delete();
-	dst.delete();
+  src.delete();
+  mask.delete();
+  dst.delete();
 
-	return canvas;
+  return canvas;
 }
 
 export type RecognizeProgress = {
-	progress: number;
-	status: string;
+  progress: number;
+  status: string;
 };
 type RecognizeInput = {
-	srcImg: ImageLike;
-	maskImg?: ImageLike;
-	thresholdPercentage: number;
-	onProgress?: (progress: RecognizeProgress) => void;
+  srcImg: ImageLike;
+  maskImg?: ImageLike;
+  thresholdPercentage: number;
+  onProgress?: (progress: RecognizeProgress) => void;
 };
-export async function recognize({
-	srcImg,
-	maskImg,
-	thresholdPercentage,
-	onProgress,
-}: RecognizeInput) {
-	console.log("parse", srcImg, maskImg, thresholdPercentage);
-	const worker = await createWorker("eng", OEM.DEFAULT, {
-		logger: (m) => {
-			console.log(m);
-			onProgress?.(m);
-		},
-	});
+export async function recognize({ srcImg, maskImg, thresholdPercentage, onProgress }: RecognizeInput) {
+  console.log('parse', srcImg, maskImg, thresholdPercentage);
+  const worker = await createWorker('eng', OEM.DEFAULT, {
+    logger: (m) => {
+      console.log(m);
+      onProgress?.(m);
+    },
+  });
 
-	const result = await worker.recognize(srcImg);
-	await worker.terminate();
+  const result = await worker.recognize(srcImg);
+  await worker.terminate();
 
-	const src = cv.imread(srcImg);
-	const mask = maskImg
-		? cv.imread(maskImg)
-		: cv.Mat.zeros(src.rows, src.cols, src.type());
-	cv.cvtColor(mask, mask, cv.COLOR_RGBA2GRAY);
+  const src = cv.imread(srcImg);
+  const mask = maskImg ? cv.imread(maskImg) : cv.Mat.zeros(src.rows, src.cols, src.type());
+  cv.cvtColor(mask, mask, cv.COLOR_RGBA2GRAY);
 
-	const blocks = result.data.blocks ?? [];
-	for (let bix = 0; bix < blocks.length; bix++) {
-		const block = blocks[bix];
-		block.id = `b-${bix}`;
+  const blocks = result.data.blocks ?? [];
+  for (let bix = 0; bix < blocks.length; bix++) {
+    const block = blocks[bix];
+    block.id = `b-${bix}`;
 
-		for (let pix = 0; pix < block.paragraphs.length; pix++) {
-			const paragraph = block.paragraphs[pix];
-			paragraph.id = `${block.id}-p-${pix}`;
+    for (let pix = 0; pix < block.paragraphs.length; pix++) {
+      const paragraph = block.paragraphs[pix];
+      paragraph.id = `${block.id}-p-${pix}`;
 
-			for (let lix = 0; lix < paragraph.lines.length; lix++) {
-				const line = paragraph.lines[lix];
-				line.id = `${paragraph.id}-l-${lix}`;
+      for (let lix = 0; lix < paragraph.lines.length; lix++) {
+        const line = paragraph.lines[lix];
+        line.id = `${paragraph.id}-l-${lix}`;
 
-				for (let wix = 0; wix < line.words.length; wix++) {
-					const word = line.words[wix];
-					word.id = `${line.id}-w-${wix}`;
-					word.is_highlighted = isHighlighted(word, mask, thresholdPercentage);
-				}
-			}
-		}
-	}
+        for (let wix = 0; wix < line.words.length; wix++) {
+          const word = line.words[wix];
+          word.id = `${line.id}-w-${wix}`;
+          word.is_highlighted = isHighlighted(word, mask, thresholdPercentage);
+        }
+      }
+    }
+  }
 
-	mask.delete();
+  mask.delete();
 
-	return result;
+  return result;
 }
 
-const isHighlighted = (
-	word: Word,
-	mask: cv.Mat,
-	thresholdPercentage = 25,
-): boolean => {
-	const { x0, y0, x1, y1 } = word.bbox;
-	const width = x1 - x0;
-	const height = y1 - y0;
+const isHighlighted = (word: Word, mask: cv.Mat, thresholdPercentage = 25): boolean => {
+  const { x0, y0, x1, y1 } = word.bbox;
+  const width = x1 - x0;
+  const height = y1 - y0;
 
-	const rectThresholdPixels = (width * height * thresholdPercentage) / 100;
+  const rectThresholdPixels = (width * height * thresholdPercentage) / 100;
 
-	const imgMaskRoi = mask.roi(new cv.Rect(x0, y0, width, height));
-	const count = cv.countNonZero(imgMaskRoi);
+  const imgMaskRoi = mask.roi(new cv.Rect(x0, y0, width, height));
+  const count = cv.countNonZero(imgMaskRoi);
 
-	return count > rectThresholdPixels;
+  return count > rectThresholdPixels;
 };

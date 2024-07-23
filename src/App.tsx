@@ -1,21 +1,15 @@
-import { useEffect, useRef, useState } from "react";
-import { RecognizeResult } from "tesseract.js";
-import { Carousel, CarouselItem } from "./components/Carousel";
-import { ColorPicker } from "./components/ColorPicker";
-import { Container } from "./components/Container";
-import { ImagePreview } from "./components/ImagePreview";
-import { ImageUpload } from "./components/ImageUpload";
-import { TextRenderer } from "./components/TextRenderer";
-import { ColorRange, HSV, RGB } from "./libs/color";
-import {
-  RecognizeProgress,
-  applyMask,
-  colorSegmentation,
-  recognize,
-  threshold,
-} from "./libs/ocr";
-import { loadImage, useCanvasSize, useContainerSize } from "./libs/image";
-import { Progress } from "./components/Progress";
+import { useEffect, useRef, useState } from 'react';
+import type { RecognizeResult } from 'tesseract.js';
+import { Carousel, CarouselItem } from './components/Carousel';
+import { ColorPicker } from './components/ColorPicker';
+import { Container } from './components/Container';
+import { ImagePreview } from './components/ImagePreview';
+import { ImageUpload } from './components/ImageUpload';
+import { Progress } from './components/Progress';
+import { TextRenderer } from './components/TextRenderer';
+import { type ColorRange, HSV, RGB } from './libs/color';
+import { loadImage, useCanvasSize, useContainerSize } from './libs/image';
+import { type RecognizeProgress, applyMask, colorSegmentation, recognize, threshold } from './libs/ocr';
 
 function App() {
   const [image, setImage] = useState<HTMLImageElement | undefined>(undefined);
@@ -23,15 +17,9 @@ function App() {
   const containerSize = useContainerSize(containerRef);
   const canvasSize = useCanvasSize(image, containerSize);
 
-  const [canvas1, setCanvas1] = useState<HTMLCanvasElement | undefined>(
-    undefined,
-  );
-  const [canvas2, setCanvas2] = useState<HTMLCanvasElement | undefined>(
-    undefined,
-  );
-  const [canvas3, setCanvas3] = useState<HTMLCanvasElement | undefined>(
-    undefined,
-  );
+  const [canvas1, setCanvas1] = useState<HTMLCanvasElement | undefined>(undefined);
+  const [canvas2, setCanvas2] = useState<HTMLCanvasElement | undefined>(undefined);
+  const [canvas3, setCanvas3] = useState<HTMLCanvasElement | undefined>(undefined);
 
   const [result, setResult] = useState<RecognizeResult>();
   const [progress, setProgress] = useState<RecognizeProgress>();
@@ -100,14 +88,11 @@ function App() {
 
   return (
     <main className="flex min-h-screen flex-col items-center bg-gray-100">
-      <h1 className="text-4xl font-bold font-mono text-gray-800 p-4">
-        Highlights
-      </h1>
+      <h1 className="text-4xl font-bold font-mono text-gray-800 p-4">Highlights</h1>
       <p className="font-mono">
         Upload an image to start the OCR process.
         <br />
-        If the image contains highlights, use the color picker to select the
-        highlight color.
+        If the image contains highlights, use the color picker to select the highlight color.
       </p>
 
       <div className="container mx-auto p-4">
@@ -148,12 +133,7 @@ function App() {
             )}
           </Container>
           <Container>
-            {progress ? (
-              <Progress
-                progress={progress?.progress}
-                status={progress?.status}
-              />
-            ) : null}
+            {progress ? <Progress progress={progress?.progress} status={progress?.status} /> : null}
             <TextRenderer highlightColor={color?.current} result={result} />
           </Container>
         </div>
