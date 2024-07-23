@@ -1,5 +1,5 @@
 # Highlights
-> Extract hightlighted text from images
+> Extract highlighted text from images using OCR and CV in your browser
 
 This project is a JavaScript port of my Python app designed to extract highlighted text from book images. It uses OCR (Optical Character Recognition) and image processing techniques to detect and extract highlighted sections from images. See my [original post](https://dev.to/zirkelc/extract-highlighted-text-from-a-book-using-python-e15) for more information. This JavScript app runs entirely in-browser without the need to download or install any dependencies.
 
