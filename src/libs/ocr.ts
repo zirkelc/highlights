@@ -1,6 +1,6 @@
 import cv from '@techstark/opencv-js';
-import { OEM, type Word, createWorker } from 'tesseract.js';
-import { HSV, RGB } from './color';
+import { type Bbox, OEM, createWorker } from 'tesseract.js';
+import { HSV } from './color';
 
 declare module 'tesseract.js' {
   interface Block {
@@ -13,6 +13,10 @@ declare module 'tesseract.js' {
     id: string;
   }
   interface Word {
+    id: string;
+    is_highlighted: boolean;
+  }
+  interface Symbol {
     id: string;
     is_highlighted: boolean;
   }
@@ -163,7 +167,28 @@ export async function recognize({ srcImg, maskImg, thresholdPercentage, onProgre
         for (let wix = 0; wix < line.words.length; wix++) {
           const word = line.words[wix];
           word.id = `${line.id}-w-${wix}`;
-          word.is_highlighted = isHighlighted(word, mask, thresholdPercentage);
+          word.is_highlighted = isHighlighted(word.bbox, mask, thresholdPercentage);
+
+          for (let sx = 0; sx < word.symbols.length; sx++) {
+            const symbol = word.symbols[sx];
+            symbol.id = `${word.id}-s-${sx}`;
+
+            // TODO for single chars we should calculate the space each character needs and substract it from te bounding box area
+            // then use the remaining area to calculate the threshold
+            // we can use teh font data on the Word to calculate the space each character needs
+
+            // Single characters have less available space, so we need to lower the threshold
+            // Some chars like 'I', 'i' and 'l' are to narrow, so we need to lower the threshold even more
+            let symbolThresholdPercentage = 10;
+            switch (symbol.text) {
+              case 'I':
+              case 'i':
+              case 'l':
+                symbolThresholdPercentage = 5;
+                break;
+            }
+            symbol.is_highlighted = isHighlighted(symbol.bbox, mask, symbolThresholdPercentage);
+          }
         }
       }
     }
@@ -174,8 +199,8 @@ export async function recognize({ srcImg, maskImg, thresholdPercentage, onProgre
   return result;
 }
 
-const isHighlighted = (word: Word, mask: cv.Mat, thresholdPercentage = 25): boolean => {
-  const { x0, y0, x1, y1 } = word.bbox;
+const isHighlighted = (bbox: Bbox, mask: cv.Mat, thresholdPercentage = 25): boolean => {
+  const { x0, y0, x1, y1 } = bbox;
   const width = x1 - x0;
   const height = y1 - y0;
 

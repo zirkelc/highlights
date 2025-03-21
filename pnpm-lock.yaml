@@ -28,10 +28,10 @@ importers:
         specifier: 1.8.3
         version: 1.8.3
       '@types/react':
-        specifier: ^18.2.43
+        specifier: ^18.2.48
         version: 18.2.48
       '@types/react-dom':
-        specifier: ^18.2.17
+        specifier: ^18.2.18
         version: 18.2.18
       '@vitejs/plugin-react':
         specifier: ^4.2.1
@@ -46,10 +46,10 @@ importers:
         specifier: ^3.4.1
         version: 3.4.1
       typescript:
-        specifier: ^5.2.2
+        specifier: ^5.3.3
         version: 5.3.3
       vite:
-        specifier: ^5.0.8
+        specifier: ^5.0.12
         version: 5.0.12
       vite-plugin-svgr:
         specifier: ^4.2.0
@@ -747,8 +747,8 @@ packages:
     resolution: {integrity: sha512-Gmy6FhYlCY7uOElZUSbxo2UCDH8owEk996gkbrpsgGtrJLM3J7jGxl9Ic7Qwwj4ivOE5AWZWRMecDdF7hqGjFA==}
     engines: {node: '>=10'}
 
-  caniuse-lite@1.0.30001581:
-    resolution: {integrity: sha512-whlTkwhqV2tUmP3oYhtNfaWGYHDdS3JYFQBKXxcUR9qqPWsRhFHhoISO2Xnl/g0xyKzht9mI1LZpiNWfMzHixQ==}
+  caniuse-lite@1.0.30001706:
+    resolution: {integrity: sha512-3ZczoTApMAZwPKYWmwVbQMFpXBDds3/0VciVoUwPUbldlYyVLmRVuRs/PcUZtHpbLRpzzDvrvnFuREsGt6lUug==}
 
   chalk@2.4.2:
     resolution: {integrity: sha512-Mti+f9lpJNcwF4tWV8/OrTTtF1gZi+f8FqlyAdouralcFWFQWF2+NgCHShjkCb+IFBLq9buZwE1xckQU4peSuQ==}
@@ -1917,7 +1917,7 @@ snapshots:
   autoprefixer@10.4.17(postcss@8.4.33):
     dependencies:
       browserslist: 4.22.3
-      caniuse-lite: 1.0.30001581
+      caniuse-lite: 1.0.30001706
       fraction.js: 4.3.7
       normalize-range: 0.1.2
       picocolors: 1.0.0
@@ -1940,7 +1940,7 @@ snapshots:
 
   browserslist@4.22.3:
     dependencies:
-      caniuse-lite: 1.0.30001581
+      caniuse-lite: 1.0.30001706
       electron-to-chromium: 1.4.651
       node-releases: 2.0.14
       update-browserslist-db: 1.0.13(browserslist@4.22.3)
@@ -1951,7 +1951,7 @@ snapshots:
 
   camelcase@6.3.0: {}
 
-  caniuse-lite@1.0.30001581: {}
+  caniuse-lite@1.0.30001706: {}
 
   chalk@2.4.2:
     dependencies:
