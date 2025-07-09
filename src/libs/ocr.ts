@@ -133,11 +133,12 @@ type RecognizeInput = {
   srcImg: ImageLike;
   maskImg?: ImageLike;
   thresholdPercentage: number;
+  language?: string;
   onProgress?: (progress: RecognizeProgress) => void;
 };
-export async function recognize({ srcImg, maskImg, thresholdPercentage, onProgress }: RecognizeInput) {
+export async function recognize({ srcImg, maskImg, thresholdPercentage, language = 'eng', onProgress }: RecognizeInput) {
   console.log('parse', srcImg, maskImg, thresholdPercentage);
-  const worker = await createWorker('eng', OEM.DEFAULT, {
+  const worker = await createWorker(language, OEM.DEFAULT, {
     logger: (m) => {
       console.log(m);
       onProgress?.(m);

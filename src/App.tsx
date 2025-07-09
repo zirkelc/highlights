@@ -24,6 +24,7 @@ function App() {
   const [result, setResult] = useState<RecognizeResult>();
   const [progress, setProgress] = useState<RecognizeProgress>();
   const [color, setColor] = useState<ColorRange<HSV> | undefined>();
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('eng');
 
   const handleClearImage = () => {
     setImage(undefined);
@@ -37,12 +38,16 @@ function App() {
   };
 
   const handleColorChange = (rgb: RGB) => {
-    // convert RGB to HSV
+    /** convert RGB to HSV */
     const hsv = RGB.toHSV(rgb);
 
-    // create a color range for the mask
+    /** create a color range for the mask */
     const [lower, upper] = HSV.range(hsv, [20, 40, 40]);
     setColor({ lower, upper, current: hsv });
+  };
+
+  const handleLanguageChange = (language: string) => {
+    setSelectedLanguage(language);
   };
 
   useEffect(() => {
@@ -66,25 +71,26 @@ function App() {
           setCanvas3(imageMaskedCanvas);
         }
 
-        // TODO only run highlight detecttion of color change and update it live when hovering?
-        // TODO draw bounding boxes for words and highligted areas
-        // TODO add color picker lense and cursor
+        /** TODO only run highlight detecttion of color change and update it live when hovering? */
+        /** TODO draw bounding boxes for words and highligted areas */
+        /** TODO add color picker lense and cursor */
         const result = await recognize({
           srcImg: thresholdCanvas,
           maskImg: maskCanvas,
           thresholdPercentage: 25,
+          language: selectedLanguage,
           onProgress: (progress) => setProgress(progress),
         });
         setProgress(undefined);
         setResult(result);
       } catch (error) {
-        // const e = cv.exceptionFromPtr(error);
+        /** const e = cv.exceptionFromPtr(error); */
         console.error(error);
       }
     };
 
     run();
-  }, [image, color]);
+  }, [image, color, selectedLanguage]);
 
   return (
     <main className="flex min-h-screen flex-col items-center bg-gray-100">
@@ -134,7 +140,12 @@ function App() {
           </Container>
           <Container>
             {progress ? <Progress progress={progress?.progress} status={progress?.status} /> : null}
-            <TextRenderer highlightColor={color?.current} result={result} />
+            <TextRenderer 
+              highlightColor={color?.current} 
+              result={result} 
+              selectedLanguage={selectedLanguage}
+              onLanguageChange={handleLanguageChange}
+            />
           </Container>
         </div>
       </div>
