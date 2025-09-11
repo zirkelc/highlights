@@ -4,6 +4,7 @@ import { HSV, RGB } from '../libs/color';
 import { Progress } from './Progress';
 
 type HighlightMode = 'word' | 'symbol';
+type DisplayMode = 'all' | 'highlighted';
 
 const SUPPORTED_LANGUAGES = [
   { code: 'eng', name: 'English' },
@@ -39,6 +40,7 @@ type Props = {
 
 export function TextRenderer({ result, highlightColor, selectedLanguage = 'eng', onLanguageChange }: Props) {
   const [highlightMode, setHighlightMode] = React.useState<HighlightMode>('word');
+  const [displayMode, setDisplayMode] = React.useState<DisplayMode>('all');
 
   const renderPage = (page: Page) => {
     return <div>{page.blocks?.map(renderBlock)}</div>;
@@ -69,6 +71,11 @@ export function TextRenderer({ result, highlightColor, selectedLanguage = 'eng',
   };
 
   const renderWord = (word: Word, index: number) => {
+    // Filter out words based on display mode
+    if (displayMode === 'highlighted' && !word.is_highlighted) {
+      return null;
+    }
+
     return highlightMode === 'word' ? (
       <span
         id={word.id}
@@ -85,6 +92,11 @@ export function TextRenderer({ result, highlightColor, selectedLanguage = 'eng',
   };
 
   const renderSymbol = (symbol: TesseractSymbol, index: number) => {
+    // Filter out symbols based on display mode
+    if (displayMode === 'highlighted' && !symbol.is_highlighted) {
+      return null;
+    }
+
     return (
       <span id={symbol.id} key={symbol.id} className={`${symbol.is_highlighted ? 'highlighted' : ''}`}>
         {symbol.text}
@@ -124,6 +136,29 @@ export function TextRenderer({ result, highlightColor, selectedLanguage = 'eng',
             }`}
             onClick={() => setHighlightMode('symbol')}>
             Symbol
+          </button>
+        </div>
+
+        <div className="inline-flex rounded-lg shadow-2xs">
+          <button 
+            type="button" 
+            className={`py-1 px-2 inline-flex justify-center items-center gap-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-xs font-medium focus:z-10 border border-gray-200 shadow-2xs focus:outline-hidden disabled:opacity-50 disabled:pointer-events-none ${
+              displayMode === 'all' 
+                ? 'bg-black text-white dark:bg-black dark:text-white' 
+                : 'bg-white text-black dark:bg-white dark:text-black'
+            }`}
+            onClick={() => setDisplayMode('all')}>
+            All Text
+          </button>
+          <button 
+            type="button" 
+            className={`py-1 px-2 inline-flex justify-center items-center gap-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-xs font-medium focus:z-10 border border-gray-200 shadow-2xs focus:outline-hidden disabled:opacity-50 disabled:pointer-events-none ${
+              displayMode === 'highlighted' 
+                ? 'bg-black text-white dark:bg-black dark:text-white' 
+                : 'bg-white text-black dark:bg-white dark:text-black'
+            }`}
+            onClick={() => setDisplayMode('highlighted')}>
+            Highlighted Only
           </button>
         </div>
 
